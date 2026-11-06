@@ -187,6 +187,23 @@ public class HTMLScannerTest extends TestCase {
         parser.parse(source);
     }
 
+    /**
+     * Regression test for an oom exception in versions < 2.60.
+     * @throws Exception
+     */
+    public void testInvalidProcessingInstruction() throws Exception {
+        final String string = "<!--?><?a/";
+
+        final HTMLConfiguration parser = new HTMLConfiguration();
+        final EvaluateInputSourceFilter filter = new EvaluateInputSourceFilter(parser);
+        parser.setProperty("http://cyberneko.org/html/properties/filters", new XMLDocumentFilter[] {filter});
+        final XMLInputSource source = new XMLInputSource(null, "myTest", null, new StringReader(string), "UTF-8");
+        parser.parse(source);
+
+        final String[] expected = {"(HTML", "(HEAD", ")HEAD", "(BODY", ")BODY", ")HTML"};
+        assertEquals(Arrays.asList(expected).toString(), filter.collectedStrings.toString());
+    }
+
     static class InfiniteLoopScanner extends HTMLScanner {
         InfiniteLoopScanner() {
             super(new HTMLConfiguration());
